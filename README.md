@@ -1,5 +1,7 @@
 # FT-857D Power Control
 
+**New here? See [INSTALL.md](INSTALL.md) for step-by-step install directions.**
+
 A small desktop program for Yaesu FT-857D owners. It shows the radio's current RF power setting for the band you are on (HF, 6m, 2m, 70cm) and lets you pick a preset (for example 5 W for digital modes) and apply it, without digging through Menu 075.
 
 It talks to the radio through [Flrig](http://www.w1hkj.com/), so Flrig must be running and connected to your radio.

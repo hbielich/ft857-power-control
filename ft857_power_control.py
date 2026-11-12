@@ -30,6 +30,11 @@ DEFAULTS = {
 
 LIMITS = {"HF": 100, "6m": 100, "2m": 50, "70cm": 20}
 
+# Power the program sets automatically when it starts, for the band the
+# radio is on at that moment. Change the number to pick another power, or
+# set it to None to turn this off.
+STARTUP_WATTS = 5
+
 # band: (EEPROM address, byte index, minimum watts, maximum watts)
 ADDRESSES = {
     "HF":   (0x009A, 1, 5, 100),
@@ -108,7 +113,7 @@ def read_word(radio, addr):
     return [int(p, 16) for p in parts]
 
 
-def do_apply(band, watts):
+def do_apply(band, watts, confirm=True):
     address, index, low, high = ADDRESSES[band]
     if not low <= watts <= high:
         raise Refused(
@@ -133,7 +138,7 @@ def do_apply(band, watts):
     if current == watts:
         return f"{band} is already {watts} W - nothing written"
 
-    if not messagebox.askokcancel(
+    if confirm and not messagebox.askokcancel(
             "Confirm power change",
             f"Change {band} RF power from {current} W to {watts} W?"):
         return "Cancelled - nothing written"
@@ -432,5 +437,43 @@ ttk.Button(controls, text="Apply",
 ttk.Label(root, textvariable=status_var,
           wraplength=390).pack(pady=5)
 
+def startup_power(tries_left=10):
+    """Set STARTUP_WATTS on the current band once, when the program starts.
+
+    Flrig may still be starting, so this tries again every 2 seconds
+    (up to 10 times) until the radio answers.
+    """
+    if STARTUP_WATTS is None:
+        return
+    if current_band is None:
+        if tries_left > 0:
+            status_var.set("Waiting for radio to set startup power...")
+            root.after(2000, lambda: (refresh(), startup_power(tries_left - 1)))
+        else:
+            status_var.set("Startup power NOT set: radio not found "
+                           "or band not supported")
+        return
+
+    band = current_band
+    watts = max(STARTUP_WATTS, ADDRESSES[band][2])
+    log(f"STARTUP: setting {band} to {watts} W")
+    try:
+        message = do_apply(band, watts, confirm=False)
+    except Refused as error:
+        log(f"STARTUP STOPPED (nothing written): {error}")
+        status_var.set(f"Startup power NOT set: {error}")
+        return
+    except Exception as error:
+        log(f"STARTUP PROBLEM: {error!r}")
+        refresh()
+        status_var.set(f"Startup WARNING: {error}")
+        messagebox.showerror("Startup power", f"{error}\n\nPlease check "
+                             "Menu 075 on the radio.")
+        return
+    refresh()
+    status_var.set(f"Startup: {message}")
+
+
 refresh()
+root.after(500, startup_power)
 root.mainloop()

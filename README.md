@@ -12,6 +12,7 @@ It talks to the radio through [Flrig](http://www.w1hkj.com/), so Flrig must be r
 - **This was developed and tested on one radio** (one FT-857D, Flrig 2.0.04, Linux Mint). It has not been tested on other radios, firmware, or setups. A write that goes wrong could change radio settings.
 - **Back up your radio first.** Save your radio's memory and settings with CHIRP (or another tool) before you use Apply for the first time.
 - **Never use it while transmitting.** The program checks and refuses if the radio or Flrig reports transmit, but do not rely on that alone.
+- **The program sets 5 W automatically when it starts**, on the band the radio is on at that moment, without asking first. If the band is already at 5 W, nothing is written. To change this, edit `STARTUP_WATTS = 5` near the top of `ft857_power_control.py`. Set it to another wattage, or to `None` to turn it off.
 - After each change, the program reads the value back twice to confirm it, and checks that the other power settings did not change. If it reports a problem, check **Menu 075** on the radio.
 - The radio does not acknowledge the write command in Flrig ("No response"). That is normal here; the read-back is the proof.
 - **No warranty.** You are responsible for your own radio. See the LICENSE.
@@ -30,8 +31,8 @@ It talks to the radio through [Flrig](http://www.w1hkj.com/), so Flrig must be r
 
    `python3 ft857_power_control.py`
 
-3. The window shows the frequency, mode, band, and current power.
-4. Pick a preset, click **Apply**, and confirm.
+3. The window shows the frequency, mode, band, and current power. A few seconds after it opens, it sets the current band to 5 W (see the safety warnings above).
+4. To use a different power, pick a preset, click **Apply**, and confirm.
 
 Buttons: **Refresh** re-reads the radio. **Settings** edits your preset lists (saved in `~/.ft857_power_presets.json`). **Apply** writes the selected power.
 

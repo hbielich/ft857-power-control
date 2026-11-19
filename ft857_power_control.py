@@ -213,6 +213,27 @@ def load_presets():
 
 
 presets = load_presets()
+# Only one copy at a time: if one is already open, ask it to come to the
+# front and quietly quit this new copy (before it touches the radio).
+import socket
+import sys
+LOCK_NAME = "\0ft857_power_control_single_instance"
+_lock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+try:
+    _lock.bind(LOCK_NAME)
+except OSError:
+    try:
+        _c = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        _c.settimeout(2)
+        _c.connect(LOCK_NAME)
+        _c.sendall(b"show")
+        _c.close()
+    except OSError:
+        pass
+    sys.exit(0)
+_lock.listen(1)
+_lock.setblocking(False)
+
 root = tk.Tk()
 root.title("FT-857D Power Control (Apply enabled)")
 # Optional window icon: looks next to this script first, then in the
@@ -476,4 +497,25 @@ def startup_power(tries_left=10):
 
 refresh()
 root.after(500, startup_power)
+
+
+def bring_to_front():
+    root.deiconify()
+    root.lift()
+    root.attributes("-topmost", True)
+    root.after(300, lambda: root.attributes("-topmost", False))
+    root.focus_force()
+
+
+def check_for_second_copy():
+    try:
+        conn, _ = _lock.accept()
+        conn.close()
+        bring_to_front()
+    except OSError:
+        pass
+    root.after(300, check_for_second_copy)
+
+
+root.after(300, check_for_second_copy)
 root.mainloop()

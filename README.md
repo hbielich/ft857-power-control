@@ -38,6 +38,8 @@ Buttons: **Refresh** re-reads the radio. **Settings** edits your preset lists (s
 
 A log of everything sent to the radio is kept in `~/ft857_write_log.txt`.
 
+Only one copy runs at a time. If you start the program while it is already open, the open window comes to the front and the new copy quits right away, before it talks to the radio (so the 5 W startup setting is not sent twice).
+
 ### Optional window icon
 
 Put a file named `ft857-power.png` in the same folder as the program (or in `~/.local/share/icons/`). If it is not there, the program runs without an icon.
